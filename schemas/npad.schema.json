@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neuropad.local/schemas/npad.schema.json",
+  "title": "NeuroPad Notebook",
+  "type": "object",
+  "required": ["version", "metadata", "cells"],
+  "properties": {
+    "version": { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "required": ["title", "created_at", "updated_at", "kernel_policy"],
+      "properties": {
+        "title": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "kernel_policy": { "enum": ["per_notebook"] }
+      }
+    },
+    "cells": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "source", "outputs", "execution"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": { "enum": ["markdown", "code"] },
+          "language": { "enum": ["go", "ruby", null] },
+          "source": { "type": "string" },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["kind", "mime", "data", "created_at"],
+              "properties": {
+                "kind": { "enum": ["stdout", "stderr", "result", "error"] },
+                "mime": { "type": "string" },
+                "data": { "type": "string" },
+                "created_at": { "type": "string", "format": "date-time" }
+              }
+            }
+          },
+          "execution": {
+            "type": "object",
+            "required": ["count", "status", "duration_ms"],
+            "properties": {
+              "count": { "type": "integer", "minimum": 0 },
+              "status": { "enum": ["idle", "running", "ok", "error", "cancelled"] },
+              "duration_ms": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

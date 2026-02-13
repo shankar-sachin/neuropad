@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neuropad.local/schemas/ipc.schema.json",
+  "title": "NeuroPad Kernel IPC",
+  "definitions": {
+    "request": {
+      "type": "object",
+      "required": ["id", "method", "params"],
+      "properties": {
+        "id": { "type": "string" },
+        "method": { "enum": ["execute", "interrupt", "restart", "ping"] },
+        "params": { "type": "object" }
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "details": {}
+      }
+    },
+    "envelope": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "event": { "type": "string" },
+        "result": {},
+        "error": { "$ref": "#/definitions/error" }
+      }
+    }
+  }
+}

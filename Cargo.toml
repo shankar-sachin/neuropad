@@ -1,0 +1,21 @@
+[workspace]
+members = [
+  "apps/neuropad-desktop/src-tauri",
+  "crates/neuropad-core",
+  "crates/neuropad-ipc",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+version = "0.1.0"
+
+[workspace.dependencies]
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+uuid = { version = "1.12", features = ["serde", "v4"] }
