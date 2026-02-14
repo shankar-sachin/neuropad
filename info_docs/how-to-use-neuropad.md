@@ -14,6 +14,7 @@ This guide focuses on the day-to-day workflow inside the app.
 - `+ Markdown`: Adds a markdown cell for notes.
 - `+ Go Cell`: Adds a Go code cell.
 - `+ Ruby Cell`: Adds a Ruby code cell.
+- `+ Python Cell`: Adds a Python code cell.
 - Type directly in the cell text area.
 
 ## Run code cells

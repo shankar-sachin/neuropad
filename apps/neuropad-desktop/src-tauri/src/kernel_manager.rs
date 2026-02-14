@@ -6,6 +6,12 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
+#[derive(Clone)]
+pub struct KernelLaunch {
+    pub executable: PathBuf,
+    pub args: Vec<String>,
+}
+
 struct KernelProcess {
     child: Child,
     stdin: ChildStdin,
@@ -13,13 +19,18 @@ struct KernelProcess {
 }
 
 impl KernelProcess {
-    fn spawn(executable: PathBuf) -> Result<Self> {
-        let mut child = Command::new(executable)
+    fn spawn(launch: &KernelLaunch) -> Result<Self> {
+        let mut cmd = Command::new(&launch.executable);
+        if !launch.args.is_empty() {
+            cmd.args(&launch.args);
+        }
+
+        let mut child = cmd
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .spawn()
-            .context("failed to spawn kernel process")?;
+            .with_context(|| format!("failed to spawn kernel process '{}'", launch.executable.display()))?;
         let stdin = child
             .stdin
             .take()
@@ -53,6 +64,7 @@ impl KernelProcess {
 pub struct NotebookRuntimes {
     go: KernelProcess,
     ruby: KernelProcess,
+    python: KernelProcess,
 }
 
 impl NotebookRuntimes {
@@ -60,6 +72,7 @@ impl NotebookRuntimes {
         match language {
             "go" => Ok(&mut self.go),
             "ruby" => Ok(&mut self.ruby),
+            "python" => Ok(&mut self.python),
             _ => Err(anyhow!("unsupported language '{language}'")),
         }
     }
@@ -67,25 +80,28 @@ impl NotebookRuntimes {
 
 pub struct KernelManager {
     notebooks: HashMap<String, NotebookRuntimes>,
-    go_kernel_path: PathBuf,
-    ruby_kernel_path: PathBuf,
+    go_kernel: KernelLaunch,
+    ruby_kernel: KernelLaunch,
+    python_kernel: KernelLaunch,
 }
 
 impl KernelManager {
-    pub fn new(go_kernel_path: PathBuf, ruby_kernel_path: PathBuf) -> Self {
+    pub fn new(go_kernel: KernelLaunch, ruby_kernel: KernelLaunch, python_kernel: KernelLaunch) -> Self {
         Self {
             notebooks: HashMap::new(),
-            go_kernel_path,
-            ruby_kernel_path,
+            go_kernel,
+            ruby_kernel,
+            python_kernel,
         }
     }
 
     fn ensure_notebook(&mut self, notebook_id: &str) -> Result<&mut NotebookRuntimes> {
         if !self.notebooks.contains_key(notebook_id) {
-            let go = KernelProcess::spawn(self.go_kernel_path.clone())?;
-            let ruby = KernelProcess::spawn(self.ruby_kernel_path.clone())?;
+            let go = KernelProcess::spawn(&self.go_kernel)?;
+            let ruby = KernelProcess::spawn(&self.ruby_kernel)?;
+            let python = KernelProcess::spawn(&self.python_kernel)?;
             self.notebooks
-                .insert(notebook_id.to_string(), NotebookRuntimes { go, ruby });
+                .insert(notebook_id.to_string(), NotebookRuntimes { go, ruby, python });
         }
         self.notebooks
             .get_mut(notebook_id)
@@ -129,6 +145,7 @@ impl KernelManager {
         if let Some(mut rt) = self.notebooks.remove(notebook_id) {
             let _ = rt.go.child.kill();
             let _ = rt.ruby.child.kill();
+            let _ = rt.python.child.kill();
         }
     }
 }

@@ -4,6 +4,7 @@ NeuroPad is a desktop-first polyglot notebook app with:
 - Rust core + desktop orchestration (Tauri)
 - Go kernel for Go code cells
 - Ruby kernel for Ruby code cells
+- Python kernel for Python code cells
 - Native `.npad` notebooks plus `.ipynb` import/export
 
 ## Monorepo Layout
@@ -13,6 +14,7 @@ NeuroPad is a desktop-first polyglot notebook app with:
 - `crates/neuropad-ipc/`: shared kernel IPC envelope types
 - `services/go-kernel/`: Go kernel process (JSON over stdio)
 - `services/ruby-kernel/`: Ruby kernel process (JSON over stdio)
+- `services/python-kernel/`: Python kernel process (JSON over stdio)
 - `schemas/`: JSON schemas for notebook and IPC
 - `scripts/`: helper scripts for local development
 
@@ -20,7 +22,8 @@ NeuroPad is a desktop-first polyglot notebook app with:
 
 - Rust toolchain (stable)
 - Go 1.22+
-- Ruby 3.x+
+- Ruby 3.x+ (or portable runtime under `services/ruby-portable/`)
+- Python 3.x+ (or portable runtime under `services/python-portable/`)
 - Node.js 20+ and npm
 
 ## Quick Start (Windows)
@@ -39,11 +42,18 @@ npm install
 npm run tauri dev
 ```
 
+## Build Installer (Windows)
+
+Build a single installer type with `.exe` first and `.msi` fallback:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/build_installer.ps1
+```
+
 ## Current V1 Scope in this implementation
 
 - Notebook model with markdown and `go`/`ruby` code cells
 - Save/load native `.npad`
 - Import/export `.ipynb` (common markdown/code/text outputs)
-- Per-notebook Go+Ruby process management in Rust kernel manager
+- Per-notebook Go+Ruby+Python process management in Rust kernel manager
 - Core Tauri commands for notebook and execution operations
 - Optional local-AI command placeholder (`ai_generate_cell`)

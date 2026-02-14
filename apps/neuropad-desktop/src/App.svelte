@@ -72,7 +72,7 @@
 <main>
   <header>
     <h1>NeuroPad</h1>
-    <p>Desktop polyglot notebook for Go and Ruby</p>
+    <p>Desktop polyglot notebook for Go, Ruby, and Python</p>
   </header>
 
   <section class="toolbar">
@@ -84,6 +84,7 @@
     <button on:click={addMarkdownCell}>+ Markdown</button>
     <button on:click={() => addCodeCell("go")}>+ Go Cell</button>
     <button on:click={() => addCodeCell("ruby")}>+ Ruby Cell</button>
+    <button on:click={() => addCodeCell("python")}>+ Python Cell</button>
   </section>
 
   {#if notebook}

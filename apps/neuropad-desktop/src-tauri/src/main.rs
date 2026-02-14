@@ -3,13 +3,13 @@
 mod kernel_manager;
 
 use chrono::Utc;
-use kernel_manager::KernelManager;
+use kernel_manager::{KernelLaunch, KernelManager};
 use neuropad_core::ipynb;
 use neuropad_core::{Cell, CellOutput, CellOutputKind, CellStatus, MetadataStore, Notebook};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{Manager, State};
 use uuid::Uuid;
 
 struct AppState {
@@ -156,15 +156,102 @@ fn ai_generate_cell(prompt: String, language: String) -> Result<Cell, String> {
     Ok(cell)
 }
 
-fn main() {
-    let go_kernel_path = PathBuf::from("..").join("..").join("..").join("services").join("go-kernel").join("go-kernel.exe");
-    let ruby_kernel_path = PathBuf::from("..").join("..").join("..").join("services").join("ruby-kernel").join("ruby_kernel.rb");
-    let metadata = MetadataStore::open("neuropad.sqlite").expect("failed to initialize metadata store");
+fn resolve_resource(app: &tauri::AppHandle, relative: &str) -> PathBuf {
+    match app.path().resource_dir() {
+        Ok(resource_dir) => resource_dir.join(relative),
+        Err(_) => PathBuf::from("..")
+            .join("..")
+            .join("..")
+            .join(relative.replace('/', "\\")),
+    }
+}
 
+fn resolve_first_existing_resource(app: &tauri::AppHandle, candidates: &[&str]) -> PathBuf {
+    for candidate in candidates {
+        let path = resolve_resource(app, candidate);
+        if path.exists() {
+            return path;
+        }
+    }
+    resolve_resource(app, candidates[0])
+}
+
+fn pick_python_executable(app: &tauri::AppHandle) -> String {
+    let embedded = resolve_first_existing_resource(
+        app,
+        &[
+            "runtimes/python/python.exe",
+            "services/python-portable/python.exe",
+            "python-portable/python.exe",
+        ],
+    );
+    if embedded.exists() {
+        embedded.to_string_lossy().to_string()
+    } else {
+        "python".to_string()
+    }
+}
+
+fn pick_ruby_launch(app: &tauri::AppHandle) -> KernelLaunch {
+    let embedded_ruby = resolve_first_existing_resource(
+        app,
+        &[
+            "runtimes/ruby/bin/ruby.exe",
+            "services/ruby-portable/bin/ruby.exe",
+            "ruby-portable/bin/ruby.exe",
+        ],
+    );
+    let ruby_script = resolve_first_existing_resource(
+        app,
+        &["kernels/ruby_kernel.rb", "services/ruby-kernel/ruby_kernel.rb", "ruby_kernel.rb"],
+    );
+    if embedded_ruby.exists() {
+        KernelLaunch {
+            executable: embedded_ruby,
+            args: vec![ruby_script.to_string_lossy().to_string()],
+        }
+    } else {
+        KernelLaunch {
+            executable: PathBuf::from("ruby"),
+            args: vec![ruby_script.to_string_lossy().to_string()],
+        }
+    }
+}
+
+fn main() {
     tauri::Builder::default()
-        .manage(AppState {
-            kernels: Mutex::new(KernelManager::new(go_kernel_path, ruby_kernel_path)),
-            metadata: Mutex::new(metadata),
+        .setup(|app| {
+            let go_kernel_path = resolve_first_existing_resource(
+                app.handle(),
+                &["kernels/go-kernel.exe", "services/go-kernel/go-kernel.exe", "go-kernel.exe"],
+            );
+            let python_kernel_script = resolve_first_existing_resource(
+                app.handle(),
+                &[
+                    "kernels/python_kernel.py",
+                    "services/python-kernel/python_kernel.py",
+                    "python_kernel.py",
+                ],
+            );
+            let python_executable = pick_python_executable(app.handle());
+            let metadata = MetadataStore::open("neuropad.sqlite").expect("failed to initialize metadata store");
+
+            let state = AppState {
+                kernels: Mutex::new(KernelManager::new(
+                    KernelLaunch {
+                        executable: go_kernel_path,
+                        args: vec![],
+                    },
+                    pick_ruby_launch(app.handle()),
+                    KernelLaunch {
+                        executable: PathBuf::from(python_executable),
+                        args: vec![python_kernel_script.to_string_lossy().to_string()],
+                    },
+                )),
+                metadata: Mutex::new(metadata),
+            };
+            app.manage(state);
+            Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             notebook_new,

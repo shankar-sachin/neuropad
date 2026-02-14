@@ -125,7 +125,7 @@ impl Notebook {
                 }
                 CellType::Code => {
                     let lang = cell.language.as_deref().unwrap_or_default();
-                    if lang != "go" && lang != "ruby" {
+                    if lang != "go" && lang != "ruby" && lang != "python" {
                         return Err(CoreError::Validation(format!(
                             "code cell {} has unsupported language '{}'",
                             cell.id, lang
@@ -194,13 +194,14 @@ mod tests {
         let mut nb = Notebook::new("test");
         nb.add_code_cell("go", "fmt.Println(\"hello\")");
         nb.add_code_cell("ruby", "puts 'hello'");
+        nb.add_code_cell("python", "print('hello')");
         assert!(nb.validate().is_ok());
     }
 
     #[test]
     fn rejects_unsupported_language() {
         let mut nb = Notebook::new("test");
-        nb.add_code_cell("python", "print('no')");
+        nb.add_code_cell("javascript", "console.log('no')");
         assert!(nb.validate().is_err());
     }
 }

@@ -4,7 +4,8 @@
 
 - Rust toolchain (stable)
 - Go 1.22+
-- Ruby 3.x+
+- Ruby 3.x+ (or portable runtime at `services/ruby-portable/`)
+- Python 3.x+ (or portable runtime at `services/python-portable/`)
 - Node.js 20+ and npm
 
 ## 1. Build kernels
@@ -31,6 +32,6 @@ npm run tauri dev
 1. Set a notebook title.
 2. Enter a full file path ending in `.npad` (for example: `C:\work\demo.npad`).
 3. Click `New`.
-4. Add cells with `+ Markdown`, `+ Go Cell`, or `+ Ruby Cell`.
+4. Add cells with `+ Markdown`, `+ Go Cell`, `+ Ruby Cell`, or `+ Python Cell`.
 5. Click `Run` on a code cell to execute it.
 6. Click `Save` to write the notebook to disk.

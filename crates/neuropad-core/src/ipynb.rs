@@ -104,7 +104,7 @@ fn detect_language(cell: &Value) -> Option<String> {
     let metadata = cell.get("metadata")?;
     let name = metadata.get("language")?.as_str()?;
     match name {
-        "go" | "ruby" => Some(name.to_string()),
+        "go" | "ruby" | "python" => Some(name.to_string()),
         _ => None,
     }
 }

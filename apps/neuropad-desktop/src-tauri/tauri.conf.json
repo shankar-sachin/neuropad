@@ -25,6 +25,13 @@
   },
   "bundle": {
     "active": true,
+    "resources": [
+      "../../../services/go-kernel/go-kernel.exe",
+      "../../../services/ruby-kernel/ruby_kernel.rb",
+      "../../../services/python-kernel/python_kernel.py",
+      "../../../services/ruby-portable",
+      "../../../services/python-portable"
+    ],
     "targets": "nsis",
     "windows": {
       "allowDowngrades": false

@@ -24,7 +24,7 @@
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "type": { "enum": ["markdown", "code"] },
-          "language": { "enum": ["go", "ruby", null] },
+          "language": { "enum": ["go", "ruby", "python", null] },
           "source": { "type": "string" },
           "outputs": {
             "type": "array",

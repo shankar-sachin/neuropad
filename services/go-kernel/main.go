@@ -3,35 +3,10 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 )
-
-type request struct {
-	ID     string          `json:"id"`
-	Method string          `json:"method"`
-	Params json.RawMessage `json:"params"`
-}
-
-type envelope struct {
-	ID     *string     `json:"id,omitempty"`
-	Event  *string     `json:"event,omitempty"`
-	Result interface{} `json:"result,omitempty"`
-	Error  *ipcError   `json:"error,omitempty"`
-}
-
-type ipcError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
-
-type executeParams struct {
-	Code string `json:"code"`
-}
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
@@ -77,59 +52,4 @@ func main() {
 			writeErr(writer, req.ID, "unknown_method", req.Method)
 		}
 	}
-}
-
-func runGoCode(code string) (string, error) {
-	tmpDir, err := os.MkdirTemp("", "neuropad-go-*")
-	if err != nil {
-		return "", err
-	}
-	defer os.RemoveAll(tmpDir)
-
-	filePath := filepath.Join(tmpDir, "main.go")
-	source := "package main\n\nimport \"fmt\"\n\nfunc main(){\n" + code + "\n}\n"
-	if err := os.WriteFile(filePath, []byte(source), 0644); err != nil {
-		return "", err
-	}
-
-	cmd := exec.Command("go", "run", filePath)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return string(output), err
-	}
-	return string(output), nil
-}
-
-func writeErr(writer *bufio.Writer, id string, code string, message string) {
-	env := envelope{
-		Error: &ipcError{
-			Code:    code,
-			Message: message,
-		},
-	}
-	if id != "" {
-		env.ID = &id
-	}
-	mustWrite(writer, env)
-}
-
-func writeResult(writer *bufio.Writer, id string, result interface{}) {
-	env := envelope{
-		Result: result,
-	}
-	if id != "" {
-		env.ID = &id
-	}
-	mustWrite(writer, env)
-}
-
-func mustWrite(writer *bufio.Writer, env envelope) {
-	payload, err := json.Marshal(env)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "marshal response error: %v\n", err)
-		return
-	}
-	writer.Write(payload)
-	writer.WriteString("\n")
-	writer.Flush()
 }

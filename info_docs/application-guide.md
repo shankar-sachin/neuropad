@@ -24,6 +24,7 @@ This document explains how the application is organized in this repository.
 
 - `services/go-kernel/`: Executes Go code over JSON/stdin-stdout IPC.
 - `services/ruby-kernel/`: Executes Ruby code over JSON/stdin-stdout IPC.
+- `services/python-kernel/`: Executes Python code over JSON/stdin-stdout IPC.
 
 ## Data schemas
 
@@ -32,7 +33,7 @@ This document explains how the application is organized in this repository.
 
 ## Current V1 functional scope
 
-- Markdown + Go + Ruby cells
+- Markdown + Go + Ruby + Python cells
 - Save/load `.npad`
 - Import/export `.ipynb`
 - Execute code cells and capture text outputs
