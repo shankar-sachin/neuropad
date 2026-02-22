@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo build:*)",
+      "Bash(rustc:*)",
+      "Bash(rustup show:*)",
+      "Bash(where:*)",
+      "Bash(cmd /c:*)",
+      "Bash(npx --yes @anthropic-ai/claude-code@latest:*)",
+      "Bash(python -c:*)",
+      "Bash(dir:*)"
+    ]
+  }
+}
